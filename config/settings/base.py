@@ -73,6 +73,8 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
+    "easy_thumbnails",
+    "filer",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -82,6 +84,14 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "drf_spectacular",
 ]
+
+THUMBNAIL_PROCESSORS = (
+    "easy_thumbnails.processors.colorspace",
+    "easy_thumbnails.processors.autocrop",
+    # 'easy_thumbnails.processors.scale_and_crop',
+    "filer.thumbnail_processors.scale_and_crop_with_subject_location",
+    "easy_thumbnails.processors.filters",
+)
 
 LOCAL_APPS = [
     "wis.users",

@@ -21,3 +21,11 @@ djangorestframework==3.14.0  # https://github.com/encode/django-rest-framework
 django-cors-headers==4.3.1  # https://github.com/adamchainz/django-cors-headers
 # DRF-spectacular for api documentation
 drf-spectacular==0.26.5  # https://github.com/tfranzel/drf-spectacular
+
+
+# Django Third party apps
+# -------------------------------------------------------------------------------
+easy-thumbnails==2.8.5  # https://github.com/SmileyChris/easy-thumbnails
+django-polymorphic==3.1.0  # https://github.com/bconstantin/django_polymorphic
+django-filer==3.1.1  # https://github.com/django-cms/django-filer
+django-mptt==0.15  # https://github.com/django-mptt/django-mptt
