@@ -1,4 +1,20 @@
-console.log("hello world")
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
 
 const video = document.getElementById("video-element")
 const image = document.getElementById("img-element")
@@ -8,6 +24,49 @@ const reloadBtn = document.getElementById("reload-btn")
 if (navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
         video.srcObject = stream
-        console.log(stream.getTracks())
+        const {height, width} = stream.getTracks()[0].getSettings()
+        // console.log(stream.getTracks()[0].getSettings())
+        captureBtn.addEventListener("click", e=> {
+            captureBtn.classList.add("not-visible")
+
+            const track = stream.getVideoTracks()[0]
+            const imageCapture = new ImageCapture(track)
+            // console.log(imageCapture)
+            imageCapture.takePhoto().then(blob => {
+                // console.log("took photo:", blob)
+                const img = new Image(width,height)
+                img.src = URL.createObjectURL(blob)
+                image.append(img)
+
+                video.classList.add("not-visible")
+
+                const reader = new FileReader()
+
+                reader.readAsDataURL(blob)
+                reader.onloadend = () => {
+                    const base64data = reader.result
+                    // console.log(base64data)
+
+                    const fd = new FormData()
+                    fd.append('csrfmiddlewaretoken', csrftoken)
+                    fd.append("photo", base64data)
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/face-id/classify/",
+                        enctype: "multipart/form-data",
+                        data: fd,
+                        processData: false,
+                        contentType: false,
+                        success: (resp) => {
+                            console.log(resp)
+                        },
+                        error: (err) => {
+                            console.log(err)
+                        }
+                    })
+                }
+            })
+        })
     })
 }

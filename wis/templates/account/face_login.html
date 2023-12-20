@@ -3,9 +3,11 @@
 {% load static %}
 
 {% block javascript %}
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>s
   <script src="{% static '/js/login.js' %}" defer></script>
 {% endblock javascript %}
 {% block content %}
+  {% csrf_token %}
   <video autoplay="true" id="video-element">
   </video>
   <div id="img-element"></div>
