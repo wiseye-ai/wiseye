@@ -1,3 +1,5 @@
+import base64
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -50,5 +52,10 @@ def login_view(request, *args, **kwargs):
 
 
 def find_user_view(request, *args, **kwargs):
-    # authorize by face
+    photo = request.POST.get("photo", None)
+    if photo is not None:
+        _, str_img = photo.split(";base64")
+        decoded_file = base64.b64decode(str_img)  # noqa
+        # Tutaj masz już plik pod nazwą decoded_file
+
     return JsonResponse({"success": True})
