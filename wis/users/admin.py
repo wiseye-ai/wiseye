@@ -5,6 +5,7 @@ from django.contrib.auth import decorators, get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from wis.users.forms import UserAdminChangeForm, UserAdminCreationForm
+from wis.users.models import UserImage
 
 User = get_user_model()
 
@@ -20,7 +21,7 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form = UserAdminCreationForm
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        (_("Personal info"), {"fields": ("name", "image")}),
+        (_("Personal info"), {"fields": ("name",)}),
         (
             _("Permissions"),
             {
@@ -47,3 +48,10 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
+
+
+@admin.register(UserImage)
+class UserImageAdmin(admin.ModelAdmin):
+    list_display = ["user"]
+    search_fields = ["user_email"]
+    autocomplete_fields = ["user"]

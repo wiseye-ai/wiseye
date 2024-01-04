@@ -1,4 +1,6 @@
 import base64
+import io
+import pickle
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,6 +10,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
+
+from wis.users.helpers import detect_faces
 
 User = get_user_model()
 
@@ -55,7 +59,16 @@ def find_user_view(request, *args, **kwargs):
     photo = request.POST.get("photo", None)
     if photo is not None:
         _, str_img = photo.split(";base64")
-        decoded_file = base64.b64decode(str_img)  # noqa
-        # Tutaj masz już plik pod nazwą decoded_file
+        decoded_file = base64.b64decode(str_img)
+        file = io.BytesIO(decoded_file)
+        detect_face = detect_faces(file)
+        if detect_face is not None:
+            encoder = pickle.load(open("encoder.pkl", "rb"))
+            model = pickle.load(open("model.pkl", "rb"))
+            pred = model.predict([detect_face])
+            predicted = max(model.predict_proba([detect_face])[0])
+            if predicted > 0.80:
+                print(encoder.inverse_transform(pred))
+                return JsonResponse({"success": True})
 
-    return JsonResponse({"success": True})
+        return JsonResponse({"success": False}, status=400)
