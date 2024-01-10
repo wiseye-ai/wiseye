@@ -22,6 +22,8 @@ const captureBtn = document.getElementById("capture-btn")
 const reloadBtn = document.getElementById("reload-btn")
 const inputPass = document.getElementById("input-pass")
 const submitBtn = document.getElementById("submit-btn")
+const messageDiv = document.getElementById("message-div")
+const message = document.getElementById("message")
 
 let requestData = null;
 
@@ -41,12 +43,11 @@ if (navigator.mediaDevices.getUserMedia) {
             const imageCapture = new ImageCapture(track)
             // console.log(imageCapture)
             imageCapture.takePhoto().then(blob => {
-                // console.log("took photo:", blob)
                 const img = new Image(width,height)
                 img.src = URL.createObjectURL(blob)
                 image.append(img)
-
-                video.classList.add("not-visible")
+                image.style.cssText = "border: 5px solid;  margin: auto; padding: 5px;"
+                // video.classList.add("not-visible")
 
                 const reader = new FileReader()
 
@@ -85,9 +86,14 @@ if (navigator.mediaDevices.getUserMedia) {
                                     data: JSON.stringify(requestData),
                                     processData: false,
                                     success: (resp) => {
-                                            console.log("Rozpoznano")
+                                                                    messageDiv.classList.remove("not-visible")
+
+                                            message.innerHTML = "Authorized"
                                         },
                                         error: (err) => {
+                                                                    messageDiv.classList.remove("not-visible")
+
+                                            message.innerHTML = "Something went wrong xD"
                                             console.log(err)
                                         }
                                     })
@@ -95,7 +101,9 @@ if (navigator.mediaDevices.getUserMedia) {
                             }
                         },
                         error: (err) => {
-                            console.log(err)
+                            messageDiv.classList.remove("not-visible")
+                            message.innerHTML = err.responseJSON.error[0]
+                            console.log(err.responseJSON.error[0])
                         }
                     })
                 }

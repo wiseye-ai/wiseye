@@ -1,11 +1,14 @@
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import decorators, get_user_model
+from django.shortcuts import redirect
+from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 
 from wis.users.forms import UserAdminChangeForm, UserAdminCreationForm
 from wis.users.models import UserImage, UserLogs
+from wis.users.tasks import training_task
 
 User = get_user_model()
 
@@ -19,6 +22,7 @@ if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
 class UserAdmin(auth_admin.UserAdmin):
     form = UserAdminChangeForm
     add_form = UserAdminCreationForm
+    change_list_template = "users/users_lists.html"
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         (_("Personal info"), {"fields": ("name",)}),
@@ -48,6 +52,22 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path("start-training/", self.train_model, name="start_training"),
+        ]
+        return my_urls + urls
+
+    def train_model(self, request):
+        training_task()
+        messages.add_message(request, messages.SUCCESS, _("Started training."))
+        return redirect(
+            reverse(
+                "admin:users_user_changelist",
+            )
+        )
 
 
 @admin.register(UserImage)

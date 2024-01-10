@@ -7,6 +7,7 @@ import pickle
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -70,7 +71,11 @@ def find_user_view(request, *args, **kwargs):
         _, str_img = photo.split(";base64")
         decoded_file = base64.b64decode(str_img)
         file = io.BytesIO(decoded_file)
-        detect_face = detect_faces(file)
+        try:
+            detect_face = detect_faces(file)
+        except ValidationError as e:
+            return JsonResponse({"error": e.messages}, status=400)
+
         if detect_face is not None:
             encoder = pickle.load(open("encoder.pkl", "rb"))
             model = pickle.load(open("model.pkl", "rb"))
@@ -80,7 +85,7 @@ def find_user_view(request, *args, **kwargs):
             print(predicted)
             user_uuid = encoder.inverse_transform(pred)[0]
 
-            if predicted > 0.2 and User.objects.filter(uuid=user_uuid, is_active=True).exists():
+            if predicted > 0.8 and User.objects.filter(uuid=user_uuid, is_active=True).exists():
                 print(user_uuid)
                 return JsonResponse({"success": True, "user_uuid": user_uuid})
         UserLogs.create_logs()
