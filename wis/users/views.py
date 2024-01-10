@@ -1,19 +1,28 @@
 import base64
 import io
+import json
+import logging
 import pickle
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
+from rest_framework import status
 
-from wis.users.helpers import detect_faces
+from wis.users.api.serializers import UserLoginSerializer
+from wis.users.helpers import detect_faces, get_user_by_uuid
+from wis.users.models import UserLogs, UserLogsType
+from wis.users.tasks import training_task
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
@@ -67,8 +76,37 @@ def find_user_view(request, *args, **kwargs):
             model = pickle.load(open("model.pkl", "rb"))
             pred = model.predict([detect_face])
             predicted = max(model.predict_proba([detect_face])[0])
-            if predicted > 0.80:
-                print(encoder.inverse_transform(pred))
-                return JsonResponse({"success": True})
 
-        return JsonResponse({"success": False}, status=400)
+            print(predicted)
+            user_uuid = encoder.inverse_transform(pred)[0]
+
+            if predicted > 0.2 and User.objects.filter(uuid=user_uuid, is_active=True).exists():
+                print(user_uuid)
+                return JsonResponse({"success": True, "user_uuid": user_uuid})
+        UserLogs.create_logs()
+        return JsonResponse({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def log_user_activity(request: WSGIRequest, *args, **kwargs):
+    body_unicode = request.body.decode("utf-8")
+    json_body = json.loads(body_unicode)
+
+    serializer = UserLoginSerializer(json_body)
+    user = get_user_by_uuid(serializer.data.get("user_uuid"))
+    if not user:
+        UserLogs.create_logs()
+        return JsonResponse({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+    if user := authenticate(request, username=user.email, password=serializer.data.get("password")):
+        if user.is_active:
+            UserLogs.create_logs(user, UserLogsType.RECOGNIZED)
+            return JsonResponse({"success": True})
+        UserLogs.create_logs()
+        return JsonResponse({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+    UserLogs.create_logs(log_type=UserLogsType.WRONG_PASSWORD)
+    return JsonResponse({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def training_model_view(request, *args, **kwargs):
+    training_task()
+    return JsonResponse({"success": True})

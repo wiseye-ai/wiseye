@@ -19,17 +19,17 @@ def get_users_count():
 @celery_app.task()
 def training_task():
     encoder = LabelEncoder()
-    lista_czegos = (
+    user_images = (
         UserImage.objects.filter(embedding__isnull=False)
         .exclude(embedding=[])
         .values_list("embedding", "user__uuid")
         .distinct()
     )
-    first_list, second_list = zip(*lista_czegos)
+    embeddings, user_uuids = zip(*user_images)
 
-    encoder.fit(second_list)
-    Y = encoder.transform(second_list)
+    encoder.fit(user_uuids)
+    Y = encoder.transform(user_uuids)
     model = SVC(kernel="linear", probability=True)
-    model.fit(first_list, Y)
+    model.fit(embeddings, Y)
     pickle.dump(model, open("model.pkl", "wb"))
     pickle.dump(encoder, open("encoder.pkl", "wb"))

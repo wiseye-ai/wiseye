@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
   libpq-dev
 
+RUN apt-get update && apt-get install libgl1 ffmpeg libsm6 libxext6 -y
+
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
 
@@ -54,6 +56,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install libgl1 ffmpeg libsm6 libxext6 -y
+
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage

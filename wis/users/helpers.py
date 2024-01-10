@@ -30,3 +30,9 @@ def get_embedding(face_img):
     face_img = np.expand_dims(face_img, axis=0)
     yhat = embedder.embeddings(face_img)
     return yhat[0]
+
+
+def get_user_by_uuid(user_uuid):
+    from wis.users.models import User
+
+    return User.objects.filter(uuid=user_uuid, is_active=True).first()

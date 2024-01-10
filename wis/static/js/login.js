@@ -20,6 +20,10 @@ const video = document.getElementById("video-element")
 const image = document.getElementById("img-element")
 const captureBtn = document.getElementById("capture-btn")
 const reloadBtn = document.getElementById("reload-btn")
+const inputPass = document.getElementById("input-pass")
+const submitBtn = document.getElementById("submit-btn")
+
+let requestData = null;
 
 reloadBtn.addEventListener("click", () => {
     window.location.reload()
@@ -63,7 +67,32 @@ if (navigator.mediaDevices.getUserMedia) {
                         processData: false,
                         contentType: false,
                         success: (resp) => {
-                            console.log(resp)
+                            inputPass.classList.remove("not-visible")
+                            inputPass.classList.add("input-pass")
+                            submitBtn.classList.remove("not-visible")
+                            requestData = {"user_uuid": resp.user_uuid}
+                            console.log(requestData)
+                            {
+                            submitBtn.addEventListener("click", e=> {
+                                console.log("Submitted")
+                                requestData.password = inputPass.value
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/face-id/log-activity/",
+                                    enctype: "application/json",
+                                    contentType: "application/json",
+                                    headers: {"X-CSRFToken": getCookie("csrftoken")},
+                                    data: JSON.stringify(requestData),
+                                    processData: false,
+                                    success: (resp) => {
+                                            console.log("Rozpoznano")
+                                        },
+                                        error: (err) => {
+                                            console.log(err)
+                                        }
+                                    })
+                                })
+                            }
                         },
                         error: (err) => {
                             console.log(err)

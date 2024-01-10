@@ -71,3 +71,28 @@ class UserImage(models.Model):
 
 class FittedModel(models.Model):
     fitted_model = FilerFileField(null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class UserLogsType(models.TextChoices):
+    """User logs types."""
+
+    RECOGNIZED = "recognized", _("recognized")
+    WRONG_PASSWORD = "wrong password", _("wrong password")
+    UNKNOWN = "unknown user", _("unknown user")
+
+
+class UserLogs(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    log_type = models.CharField(max_length=100, choices=UserLogsType.choices, null=True, blank=True)
+
+    @staticmethod
+    def create_logs(user: User = None, log_type: str = UserLogsType.UNKNOWN):
+        if log_type == UserLogsType.RECOGNIZED:
+            return UserLogs.objects.create(user=user, log_type=UserLogsType.RECOGNIZED)
+
+        if log_type == UserLogsType.WRONG_PASSWORD:
+            return UserLogs.objects.create(user=user, log_type=UserLogsType.WRONG_PASSWORD)
+
+        if log_type == UserLogsType.UNKNOWN:
+            return UserLogs.objects.create(user=user, log_type=UserLogsType.UNKNOWN)
