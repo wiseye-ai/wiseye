@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -61,7 +61,14 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 user_redirect_view = UserRedirectView.as_view()
 
 
-def login_view(request, *args, **kwargs):
+def login_view(request, *args, **kwargs) -> HttpResponse:
+    """
+    Login view
+    :param request:
+    :param args:
+    :param kwargs:
+    :return:
+    """
     return render(template_name="account/face_login.html", request=request)
 
 
@@ -74,7 +81,10 @@ def find_user_view(request, *args, **kwargs):
         try:
             detect_face = detect_faces(file)
         except ValidationError as e:
-            return JsonResponse({"error": e.messages}, status=400)
+            return JsonResponse(
+                {"error": e.messages},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if detect_face is not None:
             encoder = pickle.load(open("encoder.pkl", "rb"))
@@ -89,7 +99,7 @@ def find_user_view(request, *args, **kwargs):
                 print(user_uuid)
                 return JsonResponse({"success": True, "user_uuid": user_uuid})
         UserLogs.create_logs()
-        return JsonResponse({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"success": False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def log_user_activity(request: WSGIRequest, *args, **kwargs):

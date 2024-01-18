@@ -47,7 +47,7 @@ if (navigator.mediaDevices.getUserMedia) {
                 img.src = URL.createObjectURL(blob)
                 image.append(img)
                 image.style.cssText = "border: 5px solid;  margin: auto; padding: 5px;"
-                // video.classList.add("not-visible")
+                video.classList.add("not-visible")
 
                 const reader = new FileReader()
 
@@ -86,14 +86,12 @@ if (navigator.mediaDevices.getUserMedia) {
                                     data: JSON.stringify(requestData),
                                     processData: false,
                                     success: (resp) => {
-                                                                    messageDiv.classList.remove("not-visible")
-
+                                            messageDiv.classList.remove("not-visible")
                                             message.innerHTML = "Authorized"
                                         },
                                         error: (err) => {
-                                                                    messageDiv.classList.remove("not-visible")
-
-                                            message.innerHTML = "Something went wrong xD"
+                                            messageDiv.classList.remove("not-visible")
+                                            message.innerHTML = "Something went wrong"
                                             console.log(err)
                                         }
                                     })
@@ -102,8 +100,8 @@ if (navigator.mediaDevices.getUserMedia) {
                         },
                         error: (err) => {
                             messageDiv.classList.remove("not-visible")
-                            message.innerHTML = err.responseJSON.error[0]
-                            console.log(err.responseJSON.error[0])
+                            message.innerHTML = "Unrecognized"
+                            console.log(err)
                         }
                     })
                 }

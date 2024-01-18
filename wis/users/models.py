@@ -54,7 +54,8 @@ class UserImage(models.Model):
     )
     embedding = ArrayField(
         base_field=models.FloatField(),
-        default=list,
+        null=True,
+        blank=True,
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 

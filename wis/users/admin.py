@@ -5,10 +5,12 @@ from django.contrib.auth import decorators, get_user_model
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
+from django_celery_beat.models import ClockedSchedule, CrontabSchedule, IntervalSchedule, PeriodicTask, SolarSchedule
+from rest_framework.authtoken.models import TokenProxy
 
 from wis.users.forms import UserAdminChangeForm, UserAdminCreationForm
 from wis.users.models import UserImage, UserLogs
-from wis.users.tasks import training_task
+from wis.users.tasks import prepare_unknown_user_task, training_task
 
 User = get_user_model()
 
@@ -57,12 +59,32 @@ class UserAdmin(auth_admin.UserAdmin):
         urls = super().get_urls()
         my_urls = [
             path("start-training/", self.train_model, name="start_training"),
+            path("prepare-unknown-user/", self.prepare_unknown_user, name="prepare-unknown-user"),
         ]
         return my_urls + urls
 
     def train_model(self, request):
         training_task()
         messages.add_message(request, messages.SUCCESS, _("Started training."))
+
+        return redirect(
+            reverse(
+                "admin:users_user_changelist",
+            )
+        )
+
+    def prepare_unknown_user(self, request):
+        try:
+            prepare_unknown_user_task()
+        except ValueError as e:
+            messages.add_message(request, messages.ERROR, str(e))
+            return redirect(
+                reverse(
+                    "admin:users_user_changelist",
+                )
+            )
+
+        messages.add_message(request, messages.SUCCESS, _("Started preparing unknown user."))
         return redirect(
             reverse(
                 "admin:users_user_changelist",
@@ -80,3 +102,11 @@ class UserImageAdmin(admin.ModelAdmin):
 @admin.register(UserLogs)
 class UserLogsAdmin(admin.ModelAdmin):
     pass
+
+
+admin.site.unregister(ClockedSchedule)
+admin.site.unregister(CrontabSchedule)
+admin.site.unregister(IntervalSchedule)
+admin.site.unregister(PeriodicTask)
+admin.site.unregister(SolarSchedule)
+admin.site.unregister(TokenProxy)

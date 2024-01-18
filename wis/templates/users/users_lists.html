@@ -7,4 +7,9 @@
   <li>
     <a class="training" href="{% url 'admin:start_training' %}">{% translate "Start Training" %}</a>
   </li>
+  <li>
+    <a class="preparing"
+       href="{% url 'admin:prepare-unknown-user' %}">{% translate "Prepare Unknown User" %}
+    </a>
+  </li>
 {% endblock object-tools-items %}
