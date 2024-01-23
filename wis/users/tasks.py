@@ -15,13 +15,12 @@ User = get_user_model()  # noqa
 
 
 @celery_app.task()
-def get_users_count():
-    """A pointless Celery task to demonstrate usage."""
-    return User.objects.count()
-
-
-@celery_app.task()
 def training_task():
+    """!
+    Method used for training the model. It goes through every UserImage instance in the system and assigns to them user
+     uuids. Then, SVC model is fitted to the data and pickled to model.pkl file.
+
+    """
     encoder = LabelEncoder()
     user_images = (
         UserImage.objects.filter(embedding__isnull=False)
@@ -41,6 +40,12 @@ def training_task():
 
 @celery_app.task()
 def prepare_unknown_user_task():
+    """
+    Method used for creating user instance that is used to teach model to not recognize users that are not
+    registered in the system. It looks for inactive user with email "unknown@unknown.com" if it's not found,
+    it's created. Then, training photos from directory /opt/project/wis/media/unknown/ are used to create UserImage
+    instances for the user.
+    """
     user, created = User.objects.get_or_create(email="unknown@unknown.com", defaults={"is_active": False})
 
     if not created:

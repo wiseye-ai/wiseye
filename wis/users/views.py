@@ -62,17 +62,28 @@ user_redirect_view = UserRedirectView.as_view()
 
 
 def login_view(request, *args, **kwargs) -> HttpResponse:
-    """
+    """!
     Login view
-    :param request:
-    :param args:
-    :param kwargs:
-    :return:
+    @param request Request instance.
+    @param args
+    @param kwargs
+    @return Rendered template for login.
     """
     return render(template_name="account/face_login.html", request=request)
 
 
 def find_user_view(request, *args, **kwargs):
+    """!
+    View used for recognizing face of the user. It gets the photo of the face from request instance and then calls
+    detect_faces function which tells if the user is present in the system. If it's not or the model is not sure (there
+    is less than 0.8 of probability) error is returned. Otherwise, it returns recognized user's uuid.
+
+    @param request Request instance with user photo.
+    @param args
+    @param kwargs
+
+    @return Json response in a form {"success": False} or {"success": True}
+    """
     photo = request.POST.get("photo", None)
     if photo is not None:
         _, str_img = photo.split(";base64")
@@ -103,6 +114,16 @@ def find_user_view(request, *args, **kwargs):
 
 
 def log_user_activity(request: WSGIRequest, *args, **kwargs):
+    """!
+    View for creating UserLog instance when user tries to or logs to the system.
+    User_uuid and user password are sent with the request and then there is a check if they are matching.
+    Then, appropriate log is created.
+
+    @param request Request instance.
+    @param args
+    @param kwargs
+    @return Json response in a form {"success": False} or {"success": True}
+    """
     body_unicode = request.body.decode("utf-8")
     json_body = json.loads(body_unicode)
 
@@ -123,5 +144,15 @@ def log_user_activity(request: WSGIRequest, *args, **kwargs):
 
 
 def training_model_view(request, *args, **kwargs):
+    """!
+    View used for training the model. It calls training_task which goes through every UserImage instance in the system
+    and assigns to them user uuids. Then, SVC model is fitted to the data and pickled to model.pkl file.
+
+    @param request Request instance.
+    @param args
+    @param kwargs
+
+    @return Json response with information about successfully finishing model training.
+    """
     training_task()
     return JsonResponse({"success": True})

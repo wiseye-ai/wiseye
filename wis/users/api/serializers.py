@@ -17,5 +17,11 @@ class UserSerializer(serializers.ModelSerializer[UserType]):
 
 
 class UserLoginSerializer(serializers.Serializer):
+    """!
+    Serializer class used for sending user's login data.
+    """
+
+    ## Used for sending user uuid value # noqa
     user_uuid = serializers.UUIDField()
+    ## Used for sending user's password # noqa
     password = serializers.CharField()

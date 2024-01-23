@@ -22,6 +22,10 @@ if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
 
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
+    """!
+    Class used for the administrator page for User model.
+    """
+
     form = UserAdminChangeForm
     add_form = UserAdminCreationForm
     change_list_template = "users/users_lists.html"
@@ -64,6 +68,13 @@ class UserAdmin(auth_admin.UserAdmin):
         return my_urls + urls
 
     def train_model(self, request):
+        """!
+        Method used for starting model's training.
+
+        @param request Request instance.
+
+        @return Redirect to admin user change list view.
+        """
         training_task()
         messages.add_message(request, messages.SUCCESS, _("Started training."))
 
@@ -74,6 +85,13 @@ class UserAdmin(auth_admin.UserAdmin):
         )
 
     def prepare_unknown_user(self, request):
+        """!
+        Method used for creating user instance that is used to teach model to not recognize users that are not
+        registered in the system.
+
+        @param request Request instace.
+        @return Redirect to admin user change list view.
+        """
         try:
             prepare_unknown_user_task()
         except ValueError as e:
@@ -94,6 +112,10 @@ class UserAdmin(auth_admin.UserAdmin):
 
 @admin.register(UserImage)
 class UserImageAdmin(admin.ModelAdmin):
+    """!
+    Class used for the administrator page for UserImage model.
+    """
+
     list_display = ["user"]
     search_fields = ["user_email"]
     autocomplete_fields = ["user"]
@@ -101,6 +123,10 @@ class UserImageAdmin(admin.ModelAdmin):
 
 @admin.register(UserLogs)
 class UserLogsAdmin(admin.ModelAdmin):
+    """!
+    Class used for the administrator page for UserLogs model.
+    """
+
     pass
 
 
